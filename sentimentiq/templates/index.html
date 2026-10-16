@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentimentIQ — AI-Powered Sentiment Analysis Platform</title>
+  <meta name="description" content="Production-ready 3-class sentiment analysis platform with real ML models and NLP pipelines.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">IQ</div>
+        <div>
+          <span class="brand-title">SentimentIQ</span>
+          <span class="brand-tag">Production NLP v1.0</span>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="#analyzer" class="nav-link active">Text Analyzer</a>
+        <a href="#batch" class="nav-link">Batch CSV</a>
+        <a href="#metrics" class="nav-link">Model Metrics</a>
+        <a href="#pipeline" class="nav-link">NLP Pipeline</a>
+      </div>
+      <div class="model-badge" id="activeModelBadge">
+        <span class="status-dot"></span>
+        <span id="championModelText">Logistic Regression (TF-IDF)</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-badge">Natural Language Processing Engine</div>
+      <h1 class="hero-title">Intelligent 3-Class Sentiment Classification</h1>
+      <p class="hero-subtitle">
+        Classify customer reviews, social commentary, and support tickets into 
+        <strong>Positive</strong>, <strong>Negative</strong>, or <strong>Neutral</strong> categories 
+        using real scikit-learn machine learning and TF-IDF n-grams with negation preservation.
+      </p>
+
+      <!-- Quick Session Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Analyzed</div>
+          <div class="stat-val" id="totalAnalyzedCount">0</div>
+          <div class="stat-sub">Current session texts</div>
+        </div>
+        <div class="stat-card card-pos">
+          <div class="stat-label">Positive Sentiment</div>
+          <div class="stat-val" id="totalPosCount">0</div>
+          <div class="stat-sub" id="posPercentage">0.0% of session</div>
+        </div>
+        <div class="stat-card card-neg">
+          <div class="stat-label">Negative Sentiment</div>
+          <div class="stat-val" id="totalNegCount">0</div>
+          <div class="stat-sub" id="negPercentage">0.0% of session</div>
+        </div>
+        <div class="stat-card card-neu">
+          <div class="stat-label">Neutral Sentiment</div>
+          <div class="stat-val" id="totalNeuCount">0</div>
+          <div class="stat-sub" id="neuPercentage">0.0% of session</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Live Sentiment Analyzer -->
+    <section id="analyzer" class="content-card">
+      <div class="card-header">
+        <div>
+          <h2 class="section-title">Single Text Sentiment Analysis</h2>
+          <p class="section-desc">Type or paste customer feedback, or choose from authentic sample reviews below.</p>
+        </div>
+        <div class="sample-pills">
+          <span class="sample-label">Try sample:</span>
+          <button class="pill-btn pos" onclick="loadSample(0)">Positive Sound Review</button>
+          <button class="pill-btn neg" onclick="loadSample(1)">Negative Support Review</button>
+          <button class="pill-btn neu" onclick="loadSample(2)">Neutral Delivery Status</button>
+        </div>
+      </div>
+
+      <div class="input-container">
+        <textarea id="textInput" rows="4" placeholder="Enter text to analyze sentiment (e.g. 'The headset sound quality is crystal clear and comfortable!')..." maxlength="5000"></textarea>
+        <div class="input-meta">
+          <span id="charCount">0 / 5000 characters</span>
+          <div class="btn-group">
+            <button id="clearBtn" class="btn secondary" onclick="clearInput()">Clear</button>
+            <button id="analyzeBtn" class="btn primary" onclick="analyzeSentiment()">
+              <span id="btnSpinner" class="spinner hidden"></span>
+              <span id="btnText">Analyze Sentiment</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="resultBox" class="result-box hidden">
+        <div class="result-top">
+          <div class="sentiment-pill-large" id="sentimentBadge">
+            <span id="sentimentIcon">●</span>
+            <span id="sentimentLabel">Positive</span>
+          </div>
+          <div class="confidence-box">
+            <span class="conf-title">Model Confidence:</span>
+            <strong id="confidenceVal">87.4%</strong>
+          </div>
+        </div>
+
+        <!-- Class Probabilities Bar -->
+        <div class="prob-bars">
+          <div class="prob-row">
+            <span class="prob-name">Positive</span>
+            <div class="bar-track">
+              <div id="barPos" class="bar-fill pos" style="width: 0%"></div>
+            </div>
+            <span id="valPos" class="prob-num">0.0%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-name">Negative</span>
+            <div class="bar-track">
+              <div id="barNeg" class="bar-fill neg" style="width: 0%"></div>
+            </div>
+            <span id="valNeg" class="prob-num">0.0%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-name">Neutral</span>
+            <div class="bar-track">
+              <div id="barNeu" class="bar-fill neu" style="width: 0%"></div>
+            </div>
+            <span id="valNeu" class="prob-num">0.0%</span>
+          </div>
+        </div>
+
+        <!-- Explanation & Tokens -->
+        <div class="explanation-box">
+          <h4>Prediction Explanation:</h4>
+          <p id="explanationText"></p>
+          <div id="tokenPills" class="token-tags"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Batch CSV Analysis -->
+    <section id="batch" class="content-card">
+      <div class="card-header">
+        <div>
+          <h2 class="section-title">Batch CSV File Analysis</h2>
+          <p class="section-desc">Upload a CSV dataset with feedback comments to predict sentiment across all rows in bulk.</p>
+        </div>
+        <a href="/api/download-sample-csv" class="btn outline" download>Download Test CSV</a>
+      </div>
+
+      <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none" onchange="handleFileSelect(event)">
+        <div class="drop-icon">📄</div>
+        <h3>Click or drag & drop CSV file here</h3>
+        <p class="drop-help">Supports CSV files up to 5MB with a text or review column</p>
+      </div>
+
+      <div id="csvOptionsBox" class="csv-options hidden">
+        <div class="col-selector-row">
+          <label for="csvColumnSelect"><strong>Select Text Column to Analyze:</strong></label>
+          <select id="csvColumnSelect"></select>
+          <button class="btn primary" onclick="runBatchAnalysis()">Run Batch Predictions</button>
+        </div>
+      </div>
+
+      <!-- Batch Results Preview -->
+      <div id="batchResultsBox" class="batch-results hidden">
+        <div class="batch-summary-header">
+          <h3>Batch Results Overview</h3>
+          <button class="btn outline" onclick="exportBatchCSV()">Export Enriched CSV</button>
+        </div>
+        <div class="table-container">
+          <table class="data-table" id="batchTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Original Text</th>
+                <th>Predicted Sentiment</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="batchTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Model Metrics & Evaluation -->
+    <section id="metrics" class="content-card">
+      <div class="card-header">
+        <div>
+          <h2 class="section-title">Model Evaluation & Benchmark Comparison</h2>
+          <p class="section-desc">Both Multinomial Naive Bayes and Logistic Regression were trained on a stratified 80/20 split.</p>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <h3>Logistic Regression (TF-IDF)</h3>
+          <span class="badge-champion">Selected Champion Model</span>
+          <div class="metric-row"><span>Test Accuracy:</span> <strong id="lrAcc">75.76%</strong></div>
+          <div class="metric-row"><span>Macro F1-Score:</span> <strong id="lrF1">75.69%</strong></div>
+          <div class="metric-row"><span>Weighted Precision:</span> <strong id="lrPrec">76.01%</strong></div>
+          <div class="metric-row"><span>Weighted Recall:</span> <strong id="lrRec">75.76%</strong></div>
+        </div>
+
+        <div class="metric-card">
+          <h3>Multinomial Naive Bayes (TF-IDF)</h3>
+          <span class="badge-baseline">Baseline Classifier</span>
+          <div class="metric-row"><span>Test Accuracy:</span> <strong id="nbAcc">72.73%</strong></div>
+          <div class="metric-row"><span>Macro F1-Score:</span> <strong id="nbF1">72.70%</strong></div>
+          <div class="metric-row"><span>Weighted Precision:</span> <strong id="nbPrec">72.82%</strong></div>
+          <div class="metric-row"><span>Weighted Recall:</span> <strong id="nbRec">72.73%</strong></div>
+        </div>
+      </div>
+
+      <div class="evaluation-notes">
+        <h4>Model Selection Rationale</h4>
+        <p>
+          Logistic Regression achieved superior Macro F1 (75.69% vs 72.70%) and calibrated class probabilities. 
+          Its linear decision boundary coupled with L2 regularization effectively handles sparse TF-IDF n-gram vectors 
+          without the naive independence assumption present in Naive Bayes.
+        </p>
+      </div>
+    </section>
+
+    <!-- Section 4: NLP Pipeline Architecture -->
+    <section id="pipeline" class="content-card">
+      <div class="card-header">
+        <div>
+          <h2 class="section-title">Sentiment-Aware NLP Preprocessing Pipeline</h2>
+          <p class="section-desc">Inspect how raw customer feedback is normalized while preserving negation words.</p>
+        </div>
+      </div>
+
+      <div class="pipeline-steps">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h4>Noise Stripping</h4>
+          <p>Unescapes HTML entities, strips tags (<tag>), URLs (http/https), and @mentions.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h4>Negation Preservation</h4>
+          <p>Expands contractions (can't -> can not) and protects words like "not", "never", "no".</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h4>Tokenization & Case</h4>
+          <p>Standardizes text to lowercase, strips non-sentiment symbols, and splits into word tokens.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <h4>TF-IDF Vectorization</h4>
+          <p>Generates sublinear-scaled unigram and bigram features (1-2 ngrams) up to 5,000 vocabulary.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>SentimentIQ — Production Machine Learning Portfolio Project. Built with scikit-learn, Python, and Flask.</p>
+      <p class="license-text">Dataset licensed under CC BY 4.0 / Open Data Commons. Code released under MIT License.</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

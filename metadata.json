@@ -1,0 +1,6 @@
+{
+  "name": "SentimentIQ",
+  "description": "AI-powered 3-class sentiment analysis platform with real ML models (MultinomialNB & Logistic Regression), TF-IDF vectorization, batch CSV processing, and interactive analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
