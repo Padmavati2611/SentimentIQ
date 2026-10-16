@@ -299,7 +299,5 @@ This project is pre-configured for one-click deployment on [Render](https://rend
 3. **Active Learning Loop**: Incorporate user feedback corrections to continually expand the training corpus.
 
 ---
-
-## 11. License
-
-This project is distributed under the **MIT License**. Dataset components are licensed under **CC BY 4.0**.
+live demo:
+https://sentimentiq-1-x9v8.onrender.com
